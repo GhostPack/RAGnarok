@@ -13,7 +13,7 @@ RAGnarok is a [Retrieval-Augmented Generation](https://blogs.nvidia.com/blog/wha
 
 ***Longer explanation in the rest of the section :)***
 
-***Even Longer explanation in an upcoming blog post.***
+***Even Longer explanation in [this blog post](https://posts.specterops.io/summoning-ragnarok-with-your-nemesis-7c4f0577c93b).***
 
 #### Indexing
 
