@@ -90,8 +90,6 @@ cols = st.columns(2)
 with cols[0]:
     default_index = 0
     if "llm_model" in cookies:
-        print("cookies:")
-        print(cookies["llm_model"])
         if "neural-chat" in cookies["llm_model"].lower():
             default_index = 0
         elif "openchat" in cookies["llm_model"].lower():
