@@ -152,9 +152,11 @@ with cols[0]:
             default_index = 1
         elif cookies["embedding_model"] == 'TaylorAI/bge-micro-v2':
             default_index = 2
+        elif cookies["embedding_model"] == 'thenlper/gte-small':
+            default_index = 3
     embedding_model = st.selectbox(
         label='Embedding model to use',
-        options=('TaylorAI/gte-tiny', 'Harmj0y/nemesis-gte-tiny', 'TaylorAI/bge-micro-v2'),
+        options=('TaylorAI/gte-tiny', 'Harmj0y/nemesis-gte-tiny', 'TaylorAI/bge-micro-v2', 'thenlper/gte-small'),
         help="Embedding model to use. TaylorAI/gte-tiny is the Nemesis Default.",
         index=default_index
     )
