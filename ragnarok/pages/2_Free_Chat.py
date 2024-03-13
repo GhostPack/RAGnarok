@@ -74,7 +74,7 @@ except:
 llm = get_llm(llm_model_path, n_gpu_layers)
 
 st.title("Free Chat With Selected Model")
-st.warning('*WARNING: results not guaranteed to be correct! Verify answers with the supplied sources.*', icon="⚠️")
+st.warning('*WARNING: results not guaranteed to be correct!*', icon="⚠️")
 
 if "freeform_messages" not in st.session_state:
     st.session_state.freeform_messages = []
