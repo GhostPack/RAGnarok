@@ -52,8 +52,10 @@ def get_llm(llm_model_path, n_gpu_layers):
 try:
     if cookies["llm_model"] == "Intel/neural-chat-7b-v3-3":
         llm_model_path = hf_hub_download("TheBloke/neural-chat-7B-v3-3-GGUF", filename="neural-chat-7b-v3-3.Q5_K_M.gguf", local_files_only=True)
-    elif cookies["llm_model"] == "openchat-3.5-0106":
-        llm_model_path = hf_hub_download("TheBloke/openchat-3.5-0106-GGUF", filename="openchat-3.5-0106.Q5_K_M.gguf", local_files_only=True)
+    elif cookies["llm_model"] == "DeepSeek-R1-Distill-Llama-8B":
+        llm_model_path = hf_hub_download("unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF", filename="DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf", local_files_only=True)
+    elif cookies["llm_model"] == "openchat-3.5-1210":
+        llm_model_path = hf_hub_download("TheBloke/openchat-3.5-1210-GGUF", filename="openchat-3.5-1210.Q8_0.gguf", local_files_only=True)
     elif cookies["llm_model"] == "Starling-LM-7B-alpha":
         llm_model_path = hf_hub_download("TheBloke/Starling-LM-7B-alpha-GGUF", filename="starling-lm-7b-alpha.Q5_K_M.gguf", local_files_only=True)
     else:
@@ -63,8 +65,10 @@ except:
     with st.spinner("Downloading LLM model (this will take some time)..."):
         if cookies["llm_model"] == "Intel/neural-chat-7b-v3-3":
             llm_model_path = hf_hub_download("TheBloke/neural-chat-7B-v3-3-GGUF", filename="neural-chat-7b-v3-3.Q5_K_M.gguf")
-        elif cookies["llm_model"] == "openchat-3.5-0106":
-            llm_model_path = hf_hub_download("TheBloke/openchat-3.5-0106-GGUF", filename="openchat-3.5-0106.Q5_K_M.gguf")
+        elif cookies["llm_model"] == "DeepSeek-R1-Distill-Llama-8B":
+            llm_model_path = hf_hub_download("unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF", filename="DeepSeek-R1-Distill-Llama-8B-Q8_0.gguf")
+        elif cookies["llm_model"] == "openchat-3.5-1210":
+            llm_model_path = hf_hub_download("TheBloke/openchat-3.5-1210-GGUF", filename="openchat-3.5-1210.Q8_0.gguf")
         elif cookies["llm_model"] == "Starling-LM-7B-alpha":
             llm_model_path = hf_hub_download("TheBloke/Starling-LM-7B-alpha-GGUF", filename="starling-lm-7b-alpha.Q5_K_M.gguf")
         else:
