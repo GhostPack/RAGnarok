@@ -92,8 +92,10 @@ with cols[0]:
     if "llm_model" in cookies:
         if "neural-chat" in cookies["llm_model"].lower():
             default_index = 0
+        elif "deepseek" in cookies["llm_model"].lower():
+            default_index = 1   
         elif "openchat" in cookies["llm_model"].lower():
-            default_index = 1
+            default_index = 2
         elif "starling" in cookies["llm_model"].lower():
             default_index = 2
     llm_model = st.selectbox(
