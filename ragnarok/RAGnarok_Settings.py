@@ -97,7 +97,7 @@ with cols[0]:
         elif "openchat" in cookies["llm_model"].lower():
             default_index = 2
         elif "starling" in cookies["llm_model"].lower():
-            default_index = 2
+            default_index = 3
     llm_model = st.selectbox(
         label='LLM model to use',
         options=('Intel/neural-chat-7b-v3-3', 'DeepSeek-R1-Distill-Qwen-7B', 'openchat-3.5-1210', 'Starling-LM-7B-alpha'),
