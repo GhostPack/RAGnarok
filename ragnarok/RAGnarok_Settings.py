@@ -91,16 +91,14 @@ with cols[0]:
     default_index = 0
     if "llm_model" in cookies:
         if "neural-chat" in cookies["llm_model"].lower():
-            default_index = 0
-        elif "deepseek" in cookies["llm_model"].lower():
-            default_index = 1   
+            default_index = 0  
         elif "openchat" in cookies["llm_model"].lower():
-            default_index = 2
+            default_index = 1
         elif "starling" in cookies["llm_model"].lower():
-            default_index = 3
+            default_index = 2
     llm_model = st.selectbox(
         label='LLM model to use',
-        options=('Intel/neural-chat-7b-v3-3', 'DeepSeek-R1-Distill-Llama-8B', 'openchat-3.5-1210', 'Starling-LM-7B-alpha'),
+        options=('Intel/neural-chat-7b-v3-3', 'openchat-3.5-1210', 'Starling-LM-7B-alpha'),
         help="The core LLM to use for chat over retrieved document snippets.",
         index=default_index
     )
