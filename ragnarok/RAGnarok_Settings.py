@@ -1,12 +1,14 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import time
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+# from langchain_community.embeddings import HuggingFaceEmbeddings
+# from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import streamlit as st
 from streamlit_cookies_manager import CookieManager
 import torch
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+torch.classes.__path__ = []
 
 cookies = CookieManager()
 while not cookies.ready():
