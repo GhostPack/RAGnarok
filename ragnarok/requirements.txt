@@ -17,7 +17,9 @@ altair==5.5.0
 annotated-types==0.7.0
     # via pydantic
 anyio==4.9.0
-    # via langchain-core
+    # via
+    #   httpx
+    #   langchain-core
 async-timeout==4.0.3
     # via
     #   aiohttp
@@ -34,7 +36,10 @@ blinker==1.9.0
 cachetools==5.5.2
     # via streamlit
 certifi==2025.1.31
-    # via requests
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
 cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.1
@@ -84,11 +89,17 @@ gitpython==3.1.44
     # via streamlit
 greenlet==3.1.1
     # via sqlalchemy
+h11==0.14.0
+    # via httpcore
 htbuilder==0.9.0
     # via
     #   markdownlit
     #   st-annotated-text
     #   streamlit-extras
+httpcore==1.0.7
+    # via httpx
+httpx==0.28.1
+    # via ollama
 huggingface-hub==0.20.3
     # via
     #   -r requirements.in
@@ -98,6 +109,7 @@ huggingface-hub==0.20.3
 idna==3.10
     # via
     #   anyio
+    #   httpx
     #   requests
     #   yarl
 jinja2==3.1.6
@@ -220,6 +232,8 @@ nvidia-nvjitlink-cu12==12.4.127
     #   torch
 nvidia-nvtx-cu12==12.4.127
     # via torch
+ollama==0.4.7
+    # via -r requirements.in
 packaging==23.2
     # via
     #   altair
@@ -258,6 +272,7 @@ pydantic==2.11.3
     #   langchain
     #   langchain-core
     #   langsmith
+    #   ollama
 pydantic-core==2.33.1
     # via pydantic
 pydeck==0.9.1
