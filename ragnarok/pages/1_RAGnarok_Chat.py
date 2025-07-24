@@ -2,6 +2,7 @@ import time
 import ntpath
 import os.path
 import requests
+import json
 from requests.auth import HTTPBasicAuth
 
 from huggingface_hub import hf_hub_download
@@ -198,49 +199,95 @@ if prompt := st.chat_input("<enter a question>"):
         results = []
 
         try:
-            data = {
-                "search_phrase": prompt,
-                "num_results": cookies['k_similarity'],
-            }
+            # data = {
+            #     "search_phrase": prompt,
+            #     "num_results": cookies['k_similarity'],
+            # }
             
-            if file_path_include:
-                data["file_path_include"] = file_path_include
-            if file_path_exclude:
-                data["file_path_exclude"] = file_path_exclude
+            # if file_path_include:
+            #     data["file_path_include"] = file_path_include
+            # if file_path_exclude:
+            #     data["file_path_exclude"] = file_path_exclude
 
-            url = f'{cookies["nemesis_url"]}nlp/hybrid_search'
+            # TODO: change this to query the local llm or remote Ollama server to get a list of search terms, then use those terms to query Nemesis
+            
+            client = get_ollama_client(cookies["ollama_url"])
+            single_turn_nlp_prompt = f"### System:\nYou are a helpful LLM who knows how to distil user queries down to an individual search term. The user is going to ask you a question, your job is to determine what the best search term is based on the users question. Only respond with the search term, nothing else. Do not preface the response with classifiers like 'search string' or 'search_term', only output the term itself. \n### User:\n{prompt}\n### Assistant:\n"
+            async def nlp_term_chat():
+                nlp_search_term_full_response = ""
+                message = {'role': 'user', 'content': single_turn_nlp_prompt}
+                async for part in await AsyncClient().chat(model=cookies['ollama_model'], messages=[message], stream=True):
+                    nlp_search_term_full_response += part['message']['content']
+                return nlp_search_term_full_response
+            nlp_search_term = asyncio.run(nlp_term_chat())
 
-            with st.spinner("Searching for initial documents from Nemesis..."):
-                if url.startswith("https://"):
-                    response = requests.post(
-                        url,
-                        json=data,
-                        auth=HTTPBasicAuth(cookies["nemesis_username"], cookies["nemesis_password"]),
-                        verify=False
-                    )
-                else:
-                    response = requests.post(
-                        url,
-                        json=data,
-                        auth=HTTPBasicAuth(cookies["nemesis_username"], cookies["nemesis_password"])
-                    )
-                if response.status_code == 200:
-                    results = response.json()
-                    if "error" in results:
-                        if results["error"] == "index_not_found_exception":
-                            st.error(f"No documents have been indexed!")
-                        else:
-                            error = results["error"]
-                            st.error(f"Error calling text search {url} with search_phrase '{prompt}' : {error}")
-                        st.stop()
-                else:
-                    st.error(f"Error calling text search {url} with search_phrase '{prompt}' : {response.status_code}")
+
+            url = "{}/hasura/v1/graphql".format(cookies["nemesis_url"])
+            payload = json.dumps({
+            "query": "\n            query SearchDocuments($searchQuery: String!, $pathPattern: String!, $agentPattern: String!, $project: String, $startDate: timestamptz, $endDate: timestamptz) {\n              search_documents(\n                args: {\n                  search_query: $searchQuery,\n                  path_pattern: $pathPattern,\n                  agent_pattern: $agentPattern,\n                  project_name: $project,\n                  start_date: $startDate,\n                  end_date: $endDate,\n                  max_results: 100\n                }\n              ) {\n                object_id\n                chunk_number\n                content\n                file_name\n                path\n                extension\n                project\n                agent_id\n                timestamp\n              }\n            }\n          ",
+            "variables": {
+                "searchQuery": nlp_search_term,
+                "pathPattern": "%",
+                "agentPattern": "%",
+                "project": None,
+                "startDate": None,
+                "endDate": None
+            }
+            })
+            # TODO: add the X-Hasura-Admin-Secret to the settings page and use that instead of hardcoding it
+            headers = {
+            'Content-Type': 'application/json',
+            'X-Hasura-Admin-Secret': 'pass456',
+            }
+
+            response = requests.request("POST", url, headers=headers, data=payload, verify=False)
+            if response.status_code != 200:
+                st.error(f"Error calling Nemesis GraphQL API: {response.status_code} - {response.text}")
+                st.stop()
+            else:
+                results = response.json()
+                if len(results["data"]["search_documents"]) == 0:
+                    st.error("No documents found matching the search criteria.")
                     st.stop()
+                else:
+                    results = results["data"]["search_documents"]
+                    print(f"Found {len(results)} documents matching the search criteria.")
+
+
+
+            # url = f'{cookies["nemesis_url"]}nlp/hybrid_search'
+            # with st.spinner("Searching for initial documents from Nemesis..."):
+            #     if url.startswith("https://"):
+            #         response = requests.get(
+            #             url,
+            #             json=data,
+            #             auth=HTTPBasicAuth(cookies["nemesis_username"], cookies["nemesis_password"]),
+            #             verify=False
+            #         )
+            #     else:
+            #         response = requests.get(
+            #             url,
+            #             json=data,
+            #             auth=HTTPBasicAuth(cookies["nemesis_username"], cookies["nemesis_password"])
+            #         )
+            #     if response.status_code == 200:
+            #         results = response.json()
+            #         if "error" in results:
+            #             if results["error"] == "index_not_found_exception":
+            #                 st.error(f"No documents have been indexed!")
+            #             else:
+            #                 error = results["error"]
+            #                 st.error(f"Error calling text search {url} with search_phrase '{prompt}' : {error}")
+            #             st.stop()
+            #     else:
+            #         st.error(f"Error calling text search {url} with search_phrase '{prompt}' : {response.status_code}")
+            #         st.stop()
+        
         except Exception as e:
             st.error(f"Error calling text search {url} with search_phrase '{prompt}' : {e}")
             st.stop()
 
-        documents = results["results"]
+        documents = results
         if mode_index == 0 or mode_index == 1:
             # Reranking process
             pairs = []
@@ -266,22 +313,22 @@ if prompt := st.chat_input("<enter a question>"):
         for i in range(len(documents)):
             document = documents[i]
             rerank_score = rerank_scores[i] if (mode_index == 0  or mode_index == 1) else 0.1
-            originating_file_name = ntpath.basename(document["originating_object_path"])
-            originating_object_id = document["originating_object_id"]
+            originating_file_name = ntpath.basename(document["path"])
+            originating_object_id = document["object_id"]
             nemesis_url = cookies["nemesis_url"]
             # link to the file in Nemesis
-            file_page_link = f"{nemesis_url}dashboard/File_Viewer?object_id={originating_object_id}"
-            snippet_id = document["id"]
+            file_page_link = f"{nemesis_url}files/{originating_object_id}"
+            # snippet_id = document["id"]
             # direct link to the snippet
-            snippet_link = f"{nemesis_url}/kibana/app/discover#/?_a=(filters:!((query:(match_phrase:(_id:'{snippet_id}')))),index:'45fbaacb-9ef9-4cd1-b837-bc8ab0448220')&_g=(time:(from:now-1y%2Fd,to:now))"
+            # snippet_link = f"{nemesis_url}/kibana/app/discover#/?_a=(filters:!((query:(match_phrase:(_id:'{snippet_id}')))),index:'45fbaacb-9ef9-4cd1-b837-bc8ab0448220')&_g=(time:(from:now-1y%2Fd,to:now))"
             
             final_results += [
                 [
                     rerank_score,
                     originating_file_name,
                     file_page_link,
-                    snippet_link,
-                    document["text"].replace('"""', '"').replace("'''", "'")
+                    # snippet_link,
+                    document["content"].replace('"""', '"').replace("'''", "'")
                 ]
             ]
     
@@ -308,7 +355,7 @@ if prompt := st.chat_input("<enter a question>"):
         sources_formatted = []
         for i in range(len(sources)):
             source = sources[i]
-            sources_formatted += [f"{i+1}. [{source[1]}]({source[2]}) (score: {source[0]:.2f}, [snippet in Elastic]({source[3]}))"]
+            sources_formatted += [f"{i+1}. [{source[1]}]({source[2]}) (score: {source[0]:.2f})"]
         sources_formatted_final = "\n".join(sources_formatted)
 
         #######################################################
@@ -328,7 +375,8 @@ Only answer questions using the source below and if you're not sure of an answer
 """
 
         for i in range(len(sources)):
-            final_result_score, originating_file_name, file_page_link, snippet_link, final_result_text = sources[i]
+            # final_result_score, originating_file_name, file_page_link, snippet_link, final_result_text = sources[i]
+            final_result_score, originating_file_name, file_page_link, final_result_text = sources[i]
 
             template += f"""
 Source Block: {i+1}
@@ -366,14 +414,13 @@ Question: {prompt}
                     async for part in await AsyncClient().chat(model=cookies['ollama_model'], messages=[message], stream=True):
                         print(part['message']['content'], end='', flush=True)
                         full_response += part['message']['content']
-                        message_placeholder.markdown(full_response + "▌")
                     return full_response
                 full_response = asyncio.run(chat())
 
             
             end = time.time()
   
-            message_placeholder.markdown(f"{full_response}\n\n*Sources:*\n{sources_formatted_final}\n\n_Generation time: {(end - start):.2f} seconds_\n")
+            message_placeholder.markdown(f"{full_response}\n\n*Sources:*\n\nSearch Term: {nlp_search_term}\n\n{sources_formatted_final}\n\n_Generation time: {(end - start):.2f} seconds_\n")
             
             print(f"LLM generation completed in {(end - start):.2f} seconds")
 
