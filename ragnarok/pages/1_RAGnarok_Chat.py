@@ -247,7 +247,7 @@ if prompt := st.chat_input("<enter a question>"):
             else:
                 results = response.json()
                 if len(results["data"]["search_documents"]) == 0:
-                    st.error("No documents found matching the search criteria.")
+                    st.error(f"No documents found matching the search criteria: {nlp_search_term}")
                     st.stop()
                 else:
                     results = results["data"]["search_documents"]
