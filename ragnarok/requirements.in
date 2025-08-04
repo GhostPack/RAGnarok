@@ -1,0 +1,10 @@
+transformers
+sentence-transformers
+huggingface-hub
+langchain
+langchain-community
+llama-cpp-python
+streamlit
+streamlit-extras
+streamlit-cookies-manager
+ollama
